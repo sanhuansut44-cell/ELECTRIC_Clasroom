@@ -1,0 +1,373 @@
+:root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-tertiary: #f1f5f9;
+    --border-primary: #cbd5e1;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --accent-blue: #2563eb;
+    --accent-green: #10b981;
+    --accent-red: #ef4444;
+    --accent-orange: #f59e0b;
+    --accent-purple: #7c3aed;
+    --glass-bg: rgba(255, 255, 255, 0.94);
+    --glass-border: rgba(226, 232, 240, 0.8);
+    --glass-blur: 12px;
+}
+
+* {
+    font-family: 'Inter', sans-serif;
+    box-sizing: border-box;
+}
+
+.font-mono,
+.mono {
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Scrollbar */
+.scroll-panel::-webkit-scrollbar,
+#component-tool-list::-webkit-scrollbar {
+    width: 5px;
+}
+
+.scroll-panel::-webkit-scrollbar-track,
+#component-tool-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scroll-panel::-webkit-scrollbar-thumb,
+#component-tool-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+/* Custom Range Slider */
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: #e2e8f0;
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #4f46e5;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
+}
+
+input[type="range"].sl-red::-webkit-slider-thumb { background: #ef4444; }
+input[type="range"].sl-blue::-webkit-slider-thumb { background: #3b82f6; }
+input[type="range"].sl-green::-webkit-slider-thumb { background: #10b981; }
+input[type="range"].sl-amber::-webkit-slider-thumb { background: #f59e0b; }
+input[type="range"].sl-purple::-webkit-slider-thumb { background: #8b5cf6; }
+
+/* Tab Active */
+.tab-btn { transition: all 0.2s; }
+.tab-btn.active {
+    background: #4f46e5;
+    color: white;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+    border-color: #4f46e5;
+}
+
+.main-tab-btn { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+.main-tab-btn.active {
+    background: #ffffff;
+    color: #3730a3;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Mode Toggle */
+.mode-btn { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* Enhanced Number Input */
+input[type="number"] {
+    cursor: ew-resize;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    user-select: none;
+}
+input[type="number"]:not(:focus):hover {
+    background: #eef2ff !important;
+    border-color: #818cf8 !important;
+    box-shadow: 0 0 0 2px rgba(129,140,248,0.25);
+}
+input[type="number"]:focus {
+    cursor: text;
+    user-select: text;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] { -moz-appearance: textfield; }
+body.num-dragging { cursor: ew-resize !important; user-select: none !important; }
+
+/* CIRCUIT BUILDER CANVAS STYLES */
+#circuit-map {
+    position: relative;
+    background: #ffffff;
+    overflow: hidden;
+    cursor: crosshair;
+    background-image: 
+        linear-gradient(to right, rgba(226, 232, 240, 0.8) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(226, 232, 240, 0.8) 1px, transparent 1px);
+    background-size: 20px 20px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+#circuit { display: block; }
+.component {
+    cursor: grab;
+    transition: filter 0.15s ease;
+}
+.component:hover {
+    filter: drop-shadow(0 2px 6px rgba(37, 99, 235, 0.3));
+}
+.component:active, .component.component-dragging {
+    cursor: grabbing;
+    filter: drop-shadow(0 6px 12px rgba(37, 99, 235, 0.45));
+}
+.component.component-selected {
+    filter: drop-shadow(0 0 0 2px #2563eb) drop-shadow(0 4px 12px rgba(37, 99, 235, 0.4));
+    outline: none;
+}
+.component-delete-btn {
+    cursor: pointer;
+    pointer-events: all;
+}
+#circuit-map.drag-over {
+    border-color: #2563eb !important;
+    box-shadow: inset 0 0 0 2px #2563eb, 0 0 15px rgba(37, 99, 235, 0.25) !important;
+}
+#drag-ghost {
+    box-shadow: 0 15px 25px -5px rgba(37, 99, 235, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    transform: translate(-50%, -50%) scale(1.05);
+}
+
+.component-box, #component-tool-list, #circuit-map, #circuit, #drag-ghost {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.component-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border: 1px solid #f1f5f9;
+    border-radius: 6px;
+    background: #ffffff;
+    cursor: grab;
+    transition: all 0.15s;
+}
+.component-box:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+.component-box:active { cursor: grabbing; background: #e2e8f0; }
+.component-box.selected-tool {
+    border-color: #2563eb !important;
+    background: #eff6ff !important;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3) !important;
+}
+.component-box.absent { display: none !important; }
+
+/* Grid View Layout for Sidebar Components */
+#component-tool-list.grid-view {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    padding: 8px !important;
+}
+#component-tool-list.grid-view .component-box {
+    flex-direction: column !important;
+    text-align: center !important;
+    justify-content: center !important;
+    padding: 8px 4px !important;
+    height: 76px !important;
+    gap: 4px !important;
+}
+#component-tool-list.grid-view .component-tool-icon {
+    width: 36px !important;
+    height: 32px !important;
+    border: none !important;
+    background: transparent !important;
+}
+#component-tool-list.grid-view h4 {
+    font-size: 10px !important;
+    line-height: 1.1 !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+#component-tool-list.grid-view span {
+    display: none !important;
+}
+
+.component-tool-icon {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+}
+
+#component-selection-area {
+    position: absolute;
+    top: 0; left: 0;
+    border: 1.5px solid rgba(79, 70, 229, 0.6);
+    background: rgba(79, 70, 229, 0.08);
+    border-radius: 2px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.sim-connection-active {
+    stroke: #10b981 !important;
+    stroke-width: 2.5 !important;
+    filter: drop-shadow(0 0 3px rgba(16, 185, 129, 0.6));
+}
+
+.sim-voltage-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    fill: #1e293b;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.sim-current-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    fill: #2563eb;
+}
+
+.status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #94a3b8;
+    transition: background 0.3s;
+}
+.status-dot.running {
+    background: #10b981;
+    box-shadow: 0 0 8px #10b981;
+    animation: pulseGlow 1.5s infinite;
+}
+.status-dot.error {
+    background: #ef4444;
+    box-shadow: 0 0 8px #ef4444;
+}
+@keyframes pulseGlow { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+/* Floating panels */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+/* ENHANCED TERMINAL SNAP & WIRING UX STYLES */
+.node {
+    cursor: pointer;
+    transition: r 0.15s ease, fill 0.15s ease, stroke 0.15s ease, filter 0.15s ease;
+}
+.node:hover, .node-hitbox:hover + .node {
+    r: 6px !important;
+    fill: #6366f1 !important;
+    stroke: #ffffff !important;
+    stroke-width: 2.5px !important;
+    filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.9));
+}
+.node-hitbox {
+    cursor: pointer;
+    fill: transparent;
+    pointer-events: all;
+}
+.snap-ring {
+    fill: rgba(16, 185, 129, 0.2);
+    stroke: #10b981;
+    stroke-width: 2.5;
+    stroke-dasharray: 4, 3;
+    animation: snapRingPulse 1s infinite linear;
+    pointer-events: none;
+}
+@keyframes snapRingPulse {
+    0% { transform: scale(0.95); opacity: 1; }
+    50% { transform: scale(1.18); opacity: 0.8; }
+    100% { transform: scale(0.95); opacity: 1; }
+}
+.wire-group {
+    cursor: pointer;
+}
+.wire-hitbox {
+    fill: none;
+    stroke: transparent;
+    stroke-width: 16px;
+    pointer-events: stroke;
+    cursor: pointer;
+}
+.wire-line {
+    fill: none;
+    stroke: #1e293b;
+    stroke-width: 2.5px;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    pointer-events: none;
+    transition: stroke 0.15s ease, stroke-width 0.15s ease, filter 0.15s ease;
+}
+.wire-group:hover .wire-line {
+    stroke: #ef4444 !important;
+    stroke-width: 3.5px !important;
+    filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.6));
+}
+
+/* HOW TO WIRE PANEL */
+#wiring-panel {
+    background: #0f172a;
+    color: #f8fafc;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    border: 1px solid #1e293b;
+    margin-top: 16px;
+}
+.wp-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.wp-title  { font-size: 1.1rem; font-weight: 700; color: #f8fafc; }
+.wp-badge  { background: #3b82f6; color: #fff; font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 12px; text-transform: uppercase; }
+#wiring-canvas-wrap { display: flex; justify-content: center; background: #020617; border-radius: 12px; padding: 12px; border: 1px solid #1e293b; }
+#wiring-canvas { border-radius: 8px; max-width: 100%; }
+#wiring-steps  { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+.wiring-step   { display: flex; align-items: flex-start; gap: 12px; background: #1e293b; padding: 10px 14px; border-radius: 10px; font-size: 13px; color: #cbd5e1; }
+.wiring-step-num { width: 22px; height: 22px; border-radius: 50%; background: #3b82f6; color: #fff; font-weight: 700; font-size: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.wiring-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; padding: 8px 12px; background: #020617; border-radius: 8px; font-size: 12px; color: #94a3b8; }
+.wiring-legend-item { display: flex; align-items: center; gap: 6px; }
+.wiring-legend-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
