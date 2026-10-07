@@ -312,6 +312,10 @@ body.num-dragging { cursor: ew-resize !important; user-select: none !important; 
     fill: transparent;
     pointer-events: all;
 }
+.junction-base {
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
 .snap-ring {
     fill: rgba(16, 185, 129, 0.2);
     stroke: #10b981;

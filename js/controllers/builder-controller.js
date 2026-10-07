@@ -215,6 +215,9 @@ export function set_component_values(comp, comp_g) {
             nCircle.setAttribute('id', cn.node_id);
             nCircle.setAttribute('cx', localX);
             nCircle.setAttribute('cy', localY);
+            if (comp.name === 'junction') {
+                nCircle.setAttribute('fill', 'transparent');
+            }
 
             const parent = nCircle.parentNode;
             const hb = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -418,15 +421,25 @@ export function update_junction_dots() {
     layer.innerHTML = "";
 
     const posCounts = {};
+    const nodeConnCounts = {};
     connection_list.forEach(conn => {
         const n1 = get_node_by_id(conn.node_1_id);
         const n2 = get_node_by_id(conn.node_2_id);
-        if (n1) posCounts[`${n1.position.x},${n1.position.y}`] = (posCounts[`${n1.position.x},${n1.position.y}`] || 0) + 1;
-        if (n2) posCounts[`${n2.position.x},${n2.position.y}`] = (posCounts[`${n2.position.x},${n2.position.y}`] || 0) + 1;
+        if (n1) {
+            const k = `${n1.position.x},${n1.position.y}`;
+            posCounts[k] = (posCounts[k] || 0) + 1;
+            nodeConnCounts[n1.id] = (nodeConnCounts[n1.id] || 0) + 1;
+        }
+        if (n2) {
+            const k = `${n2.position.x},${n2.position.y}`;
+            posCounts[k] = (posCounts[k] || 0) + 1;
+            nodeConnCounts[n2.id] = (nodeConnCounts[n2.id] || 0) + 1;
+        }
     });
 
+    // Only render a junction dot when MORE THAN 2 wires meet at this point
     for (const k in posCounts) {
-        if (posCounts[k] >= 2) {
+        if (posCounts[k] > 2) {
             const [x, y] = k.split(",").map(Number);
             const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             dot.setAttribute("cx", x); dot.setAttribute("cy", y); dot.setAttribute("r", "5");
@@ -434,6 +447,21 @@ export function update_junction_dots() {
             layer.appendChild(dot);
         }
     }
+
+    // Update junction component indicators: show placeholder only when unconnected
+    component_list.forEach(comp => {
+        if (comp.name === 'junction') {
+            const jNode = comp.nodes[0];
+            const cnt = jNode ? (nodeConnCounts[jNode.node_id] || 0) : 0;
+            const compEl = document.getElementById(comp.id);
+            if (compEl) {
+                const base = compEl.querySelector(".junction-base");
+                if (base) {
+                    base.style.display = cnt === 0 ? "block" : "none";
+                }
+            }
+        }
+    });
 }
 
 export function connect_nodes_by_ids(n1_id, n2_id, waypoints = null) {
