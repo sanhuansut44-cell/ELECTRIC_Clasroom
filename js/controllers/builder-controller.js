@@ -32,14 +32,23 @@ export let last_sim_result = null;
 export let canvas_initial_pos = new Coordinate(0, 0);
 export const circuit_default_dimension = new Dimension(2000, 1500);
 
+// Mobile touch gestures state
+let pinch_active = false;
+let pinch_start_dist = 0;
+let pinch_start_zoom = 1.0;
+let pinch_last_mid = null;
+
 export function get_component_by_id(id) { return component_list.find(c => c.id === id); }
 export function get_node_by_id(id) { return node_list.find(n => n.id === id); }
 
 export function mouse_to_svg(e) {
     const svg = document.getElementById("circuit");
     const pt = svg.createSVGPoint();
-    pt.x = e.touches ? e.touches[0].clientX : e.clientX;
-    pt.y = e.touches ? e.touches[0].clientY : e.clientY;
+    const touch = (e.touches && e.touches.length > 0) 
+        ? e.touches[0] 
+        : ((e.changedTouches && e.changedTouches.length > 0) ? e.changedTouches[0] : e);
+    pt.x = touch.clientX;
+    pt.y = touch.clientY;
     const ctm = svg.getScreenCTM();
     return ctm ? pt.matrixTransform(ctm.inverse()) : pt;
 }
@@ -68,16 +77,33 @@ export function update_viewbox() {
 
 export function set_active_tool(img, name, titleText) {
     selected_component_tool = img;
+    dragged_tool_name = name;
     const ghost = document.getElementById("drag-ghost");
     const ghostSvg = document.getElementById("drag-ghost-svg");
     const ghostLabel = document.getElementById("drag-ghost-label");
-    if (img && name && ghost && ghostSvg) {
+    if (name && ghost && ghostSvg) {
         ghostSvg.innerHTML = `<svg width="60" height="60" viewBox="0 0 100 100">${get_component_svg_data(name)}</svg>`;
         if (ghostLabel) ghostLabel.textContent = titleText || name;
-        ghost.style.display = ""; ghost.classList.remove("hidden");
+        if (img) {
+            ghost.style.display = ""; ghost.classList.remove("hidden");
+        } else {
+            ghost.classList.add("hidden"); ghost.style.display = "none";
+        }
     } else if (ghost) {
         ghost.classList.add("hidden"); ghost.style.display = "none";
     }
+
+    const placeBanner = document.getElementById("place-guide-banner");
+    const placeText = document.getElementById("place-guide-text");
+    if (placeBanner && name) {
+        if (placeText) placeText.textContent = `🎯 แตะบนพื้นที่ว่างเพื่อวาง [${titleText || name}]`;
+        placeBanner.classList.remove("hidden");
+    }
+}
+
+export function pick_component_tool(name, titleText) {
+    dragged_tool_name = name;
+    set_active_tool(null, name, titleText);
 }
 
 export function clear_active_tool() {
@@ -86,6 +112,8 @@ export function clear_active_tool() {
     if (ghost) { ghost.classList.add("hidden"); ghost.style.display = "none"; }
     const circuitMap = document.getElementById("circuit-map");
     if (circuitMap) circuitMap.classList.remove("drag-over");
+    const placeBanner = document.getElementById("place-guide-banner");
+    if (placeBanner) placeBanner.classList.add("hidden");
 }
 
 export function snap_to_grid(val, grid_size = 20) { return Math.round(val / grid_size) * grid_size; }
@@ -374,6 +402,7 @@ export function clear_builder_canvas() {
     const statusDot = document.getElementById("status-indicator");
     if (statusDot) statusDot.className = "status-dot";
     update_layers_panel(); update_junction_dots(); renderProbesOnCanvas();
+    updateMobileActions();
 }
 
 export function renderProbesOnCanvas() {
@@ -512,11 +541,13 @@ export function create_connection_element(conn) {
     path.setAttribute("class", "wire-line"); path.setAttribute("stroke", conn.connector_colour || "#1e293b"); path.setAttribute("d", pathD);
     g.appendChild(hitbox); g.appendChild(path);
 
-    // Click to select connection
-    g.addEventListener("click", (e) => {
+    // Click or touch to select connection
+    const handleConnSelect = (e) => {
         e.stopPropagation();
         select_connection(conn.id);
-    });
+    };
+    g.addEventListener("click", handleConnSelect);
+    g.addEventListener("touchstart", handleConnSelect, { passive: false });
 
     // Double-click to toggle orthogonal route
     g.addEventListener("dblclick", (e) => {
@@ -547,6 +578,7 @@ export function select_connection(conn_id) {
             line.setAttribute("filter", "drop-shadow(0 0 4px #6366f1)");
         }
     }
+    updateMobileActions();
 }
 
 export function deselect_connection() {
@@ -562,6 +594,7 @@ export function deselect_connection() {
         }
     }
     selected_connection_id = null;
+    updateMobileActions();
 }
 
 export function delete_connection(conn_id) {
@@ -569,7 +602,10 @@ export function delete_connection(conn_id) {
     if (idx !== -1) connection_list.splice(idx, 1);
     const el = document.getElementById(conn_id);
     if (el && el.parentNode) el.parentNode.removeChild(el);
-    if (selected_connection_id === conn_id) selected_connection_id = null;
+    if (selected_connection_id === conn_id) {
+        selected_connection_id = null;
+        updateMobileActions();
+    }
     update_layers_panel(); update_junction_dots();
     if (last_sim_result) run_circuit_simulation();
 }
@@ -578,6 +614,8 @@ export function finish_active_connection(target_node_param = null) {
     if (!active_connect) return;
     const snapIndicator = document.getElementById("snap-indicator");
     if (snapIndicator) snapIndicator.classList.add("hidden");
+    const wireBanner = document.getElementById("wiring-guide-banner");
+    if (wireBanner) wireBanner.classList.add("hidden");
 
     const target_node = target_node_param || active_connect.target_node;
     const tempWire = active_connect.path || active_connect.line;
@@ -746,6 +784,7 @@ export function select_component(comp_id) {
     const comp = get_component_by_id(comp_id);
     if (comp) showInspector(comp, last_sim_result);
     update_layers_panel();
+    updateMobileActions();
 }
 
 export function deselect_component() {
@@ -756,6 +795,7 @@ export function deselect_component() {
     selected_component_id = null;
     hideInspector();
     update_layers_panel();
+    updateMobileActions();
 }
 
 export function delete_component(comp_id) {
@@ -888,7 +928,7 @@ export function register_component_events(comp_g) {
         e.preventDefault(); e.stopPropagation(); delete_component(comp_id);
     });
 
-    comp_g.addEventListener("mousedown", (e) => {
+    const handleCompDown = (e) => {
         if (is_dragging_from_sidebar && (selected_component_tool || dragged_tool_name)) {
             const pt = mouse_to_svg(e);
             const name = dragged_tool_name || (selected_component_tool ? selected_component_tool.getAttribute("alt") : null);
@@ -901,6 +941,7 @@ export function register_component_events(comp_g) {
         const nodeEl = e.target.closest(".node, .node-hitbox");
 
         if (nodeEl && app_mode !== "pan") {
+            if (e.cancelable) e.preventDefault();
             let nodeId = nodeEl.getAttribute("data-node-id") || nodeEl.getAttribute("id");
             if (nodeId && nodeId.startsWith("hb_")) nodeId = nodeId.replace("hb_", "");
 
@@ -937,13 +978,16 @@ export function register_component_events(comp_g) {
                     target_node: null,
                     branchTarget: null
                 };
+                const wireBanner = document.getElementById("wiring-guide-banner");
+                if (wireBanner) wireBanner.classList.remove("hidden");
             }
             e.stopPropagation();
-        } else if (app_mode !== "pan" && e.button === 0) {
+        } else if (app_mode !== "pan" && (e.button === undefined || e.button === 0)) {
+            if (e.cancelable) e.preventDefault();
             if (active_connect) finish_active_connection(null);
 
             const comp = get_component_by_id(comp_id);
-            // Interactive toggle for switch on click
+            // Interactive toggle for switch on click/touch
             if (comp && comp.name === 'switch') {
                 comp.properties.state = comp.properties.state === 'open' ? 'closed' : 'open';
                 update_switch_visual(comp);
@@ -959,7 +1003,10 @@ export function register_component_events(comp_g) {
             };
             e.stopPropagation();
         }
-    });
+    };
+
+    comp_g.addEventListener("mousedown", handleCompDown);
+    comp_g.addEventListener("touchstart", handleCompDown, { passive: false });
 }
 
 export function showDiagnosticBanner(diagnostics) {
@@ -1101,6 +1148,99 @@ export function set_component_layout(mode) {
     }
 }
 
+export function updateMobileActions() {
+    const floating = document.getElementById("mobile-floating-actions");
+    if (!floating) return;
+    const rotateBtn = document.getElementById("mobile-btn-rotate");
+    const deleteBtn = document.getElementById("mobile-btn-delete");
+    const altRouteBtn = document.getElementById("mobile-btn-alt-route");
+    const propsBtn = document.getElementById("mobile-btn-props");
+
+    if (selected_component_id) {
+        floating.classList.remove("hidden");
+        if (rotateBtn) rotateBtn.classList.remove("hidden");
+        if (deleteBtn) deleteBtn.classList.remove("hidden");
+        if (altRouteBtn) altRouteBtn.classList.add("hidden");
+        if (propsBtn) propsBtn.classList.remove("hidden");
+    } else if (selected_connection_id) {
+        floating.classList.remove("hidden");
+        if (rotateBtn) rotateBtn.classList.add("hidden");
+        if (deleteBtn) deleteBtn.classList.remove("hidden");
+        if (altRouteBtn) altRouteBtn.classList.remove("hidden");
+        if (propsBtn) propsBtn.classList.add("hidden");
+    } else {
+        floating.classList.add("hidden");
+    }
+}
+window.updateMobileActions = updateMobileActions;
+
+export function toggleMobileSidebar(forceState = null) {
+    const sidebar = document.getElementById("builder-sidebar");
+    const backdrop = document.getElementById("sidebar-backdrop");
+    if (!sidebar) return;
+    const isClosed = sidebar.classList.contains("-translate-x-full");
+    const shouldOpen = forceState !== null ? forceState : isClosed;
+
+    if (shouldOpen) {
+        sidebar.classList.remove("-translate-x-full");
+        if (backdrop) backdrop.classList.remove("hidden");
+    } else {
+        sidebar.classList.add("-translate-x-full");
+        if (backdrop) backdrop.classList.add("hidden");
+    }
+}
+window.toggleMobileSidebar = toggleMobileSidebar;
+
+export function cancelActiveWiring() {
+    if (active_connect) {
+        const tempWire = active_connect.path || active_connect.line;
+        if (tempWire && tempWire.parentNode) tempWire.parentNode.removeChild(tempWire);
+        active_connect = null;
+    }
+    const snapIndicator = document.getElementById("snap-indicator");
+    if (snapIndicator) snapIndicator.classList.add("hidden");
+    const wireBanner = document.getElementById("wiring-guide-banner");
+    if (wireBanner) wireBanner.classList.add("hidden");
+}
+window.cancelActiveWiring = cancelActiveWiring;
+
+export function delete_selected_component_or_connection() {
+    if (selected_component_id) {
+        delete_component(selected_component_id);
+    } else if (selected_connection_id) {
+        delete_connection(selected_connection_id);
+    }
+}
+window.delete_selected_component_or_connection = delete_selected_component_or_connection;
+
+export function toggle_selected_connection_route() {
+    if (!selected_connection_id) return;
+    const conn = connection_list.find(c => c.id === selected_connection_id);
+    if (!conn) return;
+    const n1 = get_node_by_id(conn.node_1_id);
+    const n2 = get_node_by_id(conn.node_2_id);
+    if (!n1 || !n2) return;
+    conn.altRoute = !conn.altRoute;
+    conn.waypoints = null;
+    const newD = get_orthogonal_path(n1.position.x, n1.position.y, n2.position.x, n2.position.y, conn.altRoute, conn.node_1_id, conn.node_2_id);
+    const g = document.getElementById(conn.id);
+    if (g) {
+        const hitbox = g.querySelector(".wire-hitbox");
+        const path = g.querySelector(".wire-line");
+        if (hitbox) hitbox.setAttribute("d", newD);
+        if (path) path.setAttribute("d", newD);
+    }
+    update_junction_dots();
+}
+window.toggle_selected_connection_route = toggle_selected_connection_route;
+
+export function open_selected_inspector() {
+    if (!selected_component_id) return;
+    const comp = get_component_by_id(selected_component_id);
+    if (comp) showInspector(comp, last_sim_result);
+}
+window.open_selected_inspector = open_selected_inspector;
+
 export function init_builder_canvas() {
     set_zoom(1.4);
     initInspector({
@@ -1117,6 +1257,14 @@ export function init_builder_canvas() {
     const circuitMap = document.getElementById("circuit-map");
     const tools = document.getElementsByClassName("component-box");
 
+    // Mobile sidebar toggle, close button & backdrop listeners
+    const btnToggle = document.getElementById("btn-toggle-sidebar");
+    if (btnToggle) btnToggle.addEventListener("click", () => toggleMobileSidebar());
+    const btnClose = document.getElementById("btn-close-sidebar");
+    if (btnClose) btnClose.addEventListener("click", () => toggleMobileSidebar(false));
+    const backdrop = document.getElementById("sidebar-backdrop");
+    if (backdrop) backdrop.addEventListener("click", () => toggleMobileSidebar(false));
+
     for (let i = 0; i < tools.length; i++) {
         const box = tools[i];
         const img = box.querySelector(".component-tool");
@@ -1125,17 +1273,29 @@ export function init_builder_canvas() {
         if (!name) continue;
 
         box.addEventListener("dragstart", (e) => e.preventDefault());
-        const handleDragStart = (e) => {
-            if (e.cancelable) e.preventDefault();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            is_dragging_from_sidebar = true; dragged_tool_name = name;
+
+        const handleToolPick = (e) => {
+            const isTouch = !!e.touches;
+            const clientX = isTouch ? e.touches[0].clientX : e.clientX;
+            const clientY = isTouch ? e.touches[0].clientY : e.clientY;
+
+            dragged_tool_name = name;
             set_active_tool(img, name, titleEl ? titleEl.textContent : name);
-            const ghost = document.getElementById("drag-ghost");
-            if (ghost) { ghost.style.left = clientX + "px"; ghost.style.top = clientY + "px"; }
+
+            if (isTouch) {
+                // On mobile touch: close sidebar drawer so user can immediately see canvas and tap to place
+                toggleMobileSidebar(false);
+            } else {
+                is_dragging_from_sidebar = true;
+                const ghost = document.getElementById("drag-ghost");
+                if (ghost) { ghost.style.left = clientX + "px"; ghost.style.top = clientY + "px"; }
+            }
         };
-        box.addEventListener("mousedown", handleDragStart);
-        box.addEventListener("touchstart", handleDragStart, { passive: false });
+
+        box.addEventListener("mousedown", handleToolPick);
+        box.addEventListener("touchstart", (e) => {
+            handleToolPick(e);
+        }, { passive: true });
     }
 
     if (circuitMap) {
@@ -1161,6 +1321,35 @@ export function init_builder_canvas() {
     }
 
     const handleGlobalMove = (e) => {
+        // Handle 2-finger pinch zoom & 2-finger pan
+        if (e.touches && e.touches.length === 2) {
+            if (e.cancelable) e.preventDefault();
+            const t1 = e.touches[0];
+            const t2 = e.touches[1];
+            const currentDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+            const midX = (t1.clientX + t2.clientX) / 2;
+            const midY = (t1.clientY + t2.clientY) / 2;
+
+            if (pinch_active && pinch_start_dist > 0) {
+                const scale = currentDist / pinch_start_dist;
+                const targetZoom = Math.min(3.0, Math.max(0.4, pinch_start_zoom * scale));
+                set_zoom(targetZoom);
+            } else {
+                pinch_active = true;
+                pinch_start_dist = currentDist;
+                pinch_start_zoom = zoom_level;
+                pinch_last_mid = { x: midX, y: midY };
+            }
+
+            if (pinch_last_mid) {
+                pan_offset_x -= (midX - pinch_last_mid.x) / zoom_level;
+                pan_offset_y -= (midY - pinch_last_mid.y) / zoom_level;
+                pinch_last_mid = { x: midX, y: midY };
+                update_viewbox();
+            }
+            return;
+        }
+
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
         const ghost = document.getElementById("drag-ghost");
@@ -1191,6 +1380,7 @@ export function init_builder_canvas() {
         }
 
         if (active_drag) {
+            if (e.cancelable) e.preventDefault();
             const svg = document.getElementById("circuit");
             const pt = svg.createSVGPoint(); pt.x = clientX; pt.y = clientY;
             const ctm = svg.getScreenCTM();
@@ -1199,10 +1389,10 @@ export function init_builder_canvas() {
         }
 
         if (active_connect) {
+            if (e.cancelable) e.preventDefault();
             const pt = mouse_to_svg(e);
             const snapNode = get_nearest_node(pt, 25, active_connect.connection.node_1_id);
             const snapIndicator = document.getElementById("snap-indicator");
-            const lastWp = active_connect.waypoints[active_connect.waypoints.length - 1];
 
             // Check wire-to-wire T-Junction snap
             let wireBranch = null;
@@ -1242,6 +1432,7 @@ export function init_builder_canvas() {
         }
 
         if (circuit_moving) {
+            if (e.cancelable) e.preventDefault();
             pan_offset_x -= (clientX - canvas_initial_pos.x) / zoom_level;
             pan_offset_y -= (clientY - canvas_initial_pos.y) / zoom_level;
             canvas_initial_pos.x = clientX; canvas_initial_pos.y = clientY;
@@ -1250,9 +1441,13 @@ export function init_builder_canvas() {
     };
 
     window.addEventListener("mousemove", handleGlobalMove);
-    window.addEventListener("touchmove", handleGlobalMove, { passive: true });
+    window.addEventListener("touchmove", handleGlobalMove, { passive: false });
 
     const handleGlobalUp = (e) => {
+        if (e.touches && e.touches.length < 2) {
+            pinch_active = false;
+        }
+
         const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
         const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
         if (circuitMap) circuitMap.classList.remove("drag-over");
@@ -1282,7 +1477,7 @@ export function init_builder_canvas() {
     };
 
     window.addEventListener("mouseup", handleGlobalUp);
-    window.addEventListener("touchend", handleGlobalUp, { passive: true });
+    window.addEventListener("touchend", handleGlobalUp, { passive: false });
 
     window.addEventListener("keydown", (e) => {
         if (e.key === "Escape") {
@@ -1303,18 +1498,34 @@ export function init_builder_canvas() {
         }
     });
 
-    circuit.addEventListener("mousedown", (e) => {
-        if (e.cancelable) e.preventDefault();
+    const handleCanvasDown = (e) => {
+        if (e.touches && e.touches.length === 2) {
+            const t1 = e.touches[0];
+            const t2 = e.touches[1];
+            pinch_active = true;
+            pinch_start_dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+            pinch_start_zoom = zoom_level;
+            pinch_last_mid = {
+                x: (t1.clientX + t2.clientX) / 2,
+                y: (t1.clientY + t2.clientY) / 2
+            };
+            return;
+        }
+
+        if (e.cancelable && !e.touches) e.preventDefault();
         const pt = mouse_to_svg(e);
         mouse_x = pt.x; mouse_y = pt.y;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
         // If currently in active wiring: Click-to-Corner Waypoint Feature!
         if (active_connect) {
+            if (e.cancelable) e.preventDefault();
             if (active_connect.target_node || active_connect.branchTarget) {
-                // Clicked on a destination terminal or wire: finalize!
+                // Clicked/tapped on a destination terminal or wire: finalize!
                 finish_active_connection();
             } else {
-                // Clicked on empty space: Add a 90° corner waypoint!
+                // Clicked/tapped on empty space: Add a 90° corner waypoint!
                 const lastPt = active_connect.waypoints[active_connect.waypoints.length - 1];
                 const cornerPt = { x: snap_to_grid(pt.x), y: snap_to_grid(pt.y) };
 
@@ -1332,17 +1543,41 @@ export function init_builder_canvas() {
             return;
         }
 
+        // Tap-to-place selected component
         if (selected_component_tool || dragged_tool_name) {
+            if (e.cancelable) e.preventDefault();
             const name = dragged_tool_name || (selected_component_tool ? selected_component_tool.getAttribute("alt") : null);
             if (name) create_component_on_canvas(name, snap_to_grid(mouse_x - 50), snap_to_grid(mouse_y - 50));
-            clear_active_tool(); return;
+            clear_active_tool();
+            e.stopPropagation();
+            return;
         }
 
-        if (e.target.getAttribute("id") === "circuit") {
+        const isBackground = e.target.getAttribute("id") === "circuit" || e.target.getAttribute("id") === "circuit-grid" || !e.target.closest(".component, .wire-group");
+        if (isBackground) {
             deselect_component();
             deselect_connection();
-            canvas_initial_pos.x = e.clientX; canvas_initial_pos.y = e.clientY;
-            if (app_mode === "pan" || e.button === 2 || e.button === 1) circuit_moving = true;
+            canvas_initial_pos.x = clientX;
+            canvas_initial_pos.y = clientY;
+            if (app_mode === "pan" || e.button === 2 || e.button === 1 || (e.touches && e.touches.length === 1)) {
+                circuit_moving = true;
+            }
         }
-    });
+    };
+
+    circuit.addEventListener("mousedown", handleCanvasDown);
+    circuit.addEventListener("touchstart", handleCanvasDown, { passive: false });
 }
+
+// Window globally accessible functions for toolbar and mobile actions
+window.toggleMobileSidebar = toggleMobileSidebar;
+window.cancelActiveWiring = cancelActiveWiring;
+window.delete_selected_component_or_connection = delete_selected_component_or_connection;
+window.toggle_selected_connection_route = toggle_selected_connection_route;
+window.open_selected_inspector = open_selected_inspector;
+window.rotate_selected_component = rotate_selected_component;
+window.clear_active_tool = clear_active_tool;
+window.create_component_on_canvas = create_component_on_canvas;
+window.select_component = select_component;
+window.component_list = component_list;
+window.pick_component_tool = pick_component_tool;

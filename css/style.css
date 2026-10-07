@@ -375,3 +375,55 @@ body.num-dragging { cursor: ew-resize !important; user-select: none !important; 
 .wiring-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; padding: 8px 12px; background: #020617; border-radius: 8px; font-size: 12px; color: #94a3b8; }
 .wiring-legend-item { display: flex; align-items: center; gap: 6px; }
 .wiring-legend-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+/* ═══════════════════════════════════════════════════════════ */
+/* MOBILE TOUCH & RESPONSIVE CAD OPTIMIZATIONS                */
+/* ═══════════════════════════════════════════════════════════ */
+#circuit-map {
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+#circuit {
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#circuit-toolbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+#circuit-toolbar::-webkit-scrollbar {
+    display: none;
+}
+
+#mobile-floating-actions {
+    animation: popUp 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popUp {
+    0% { transform: translate(-50%, 15px) scale(0.92); opacity: 0; }
+    100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+}
+
+@media (pointer: coarse), (max-width: 1024px) {
+    .node-hitbox {
+        r: 22px !important;
+    }
+    .wire-hitbox {
+        stroke-width: 26px !important;
+    }
+    .component {
+        touch-action: none;
+    }
+}
+
+@media (max-width: 640px) {
+    #layers-panel {
+        display: none !important;
+    }
+}
+
+

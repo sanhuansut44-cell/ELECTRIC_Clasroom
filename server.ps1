@@ -17,6 +17,9 @@ while ($http.IsListening) {
         
         if (Test-Path $filePath -PathType Leaf) {
             $content = [System.IO.File]::ReadAllBytes($filePath)
+            $response.AddHeader("Cache-Control", "no-cache, no-store, must-revalidate")
+            $response.AddHeader("Pragma", "no-cache")
+            $response.AddHeader("Expires", "0")
             $ext = [System.IO.Path]::GetExtension($filePath).ToLower()
             switch ($ext) {
                 ".html" { $response.ContentType = "text/html; charset=utf-8" }

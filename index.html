@@ -50,13 +50,13 @@
             <div class="flex items-center gap-3 w-full md:w-auto justify-end">
                 <div class="flex items-center bg-black/25 rounded-lg p-1 border border-white/20">
                     <button id="btn_view_presets"
-                        class="main-tab-btn active px-3.5 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 bg-white text-[#2d2e8b] shadow-sm"
+                        class="main-tab-btn px-3.5 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 text-white/80 hover:text-white transition-colors"
                         onclick="window.switchMainView('presets')">
                         <span>⚡ Presets</span>
                         <span class="text-[10px] opacity-75">(วิเคราะห์)</span>
                     </button>
                     <button id="btn_view_builder"
-                        class="main-tab-btn px-3.5 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 text-white/80 hover:text-white transition-colors"
+                        class="main-tab-btn active px-3.5 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 bg-white text-[#2d2e8b] shadow-sm"
                         onclick="window.switchMainView('builder')">
                         <span>🛠️ Editor</span>
                         <span class="text-[10px] opacity-75">(ต่อวงจร)</span>
@@ -64,7 +64,7 @@
                 </div>
 
                 <!-- AC / DC Toggle (For Presets) -->
-                <div id="source-toggle" class="flex items-center bg-black/25 rounded-lg p-1 border border-white/20">
+                <div id="source-toggle" class="hidden flex items-center bg-black/25 rounded-lg p-1 border border-white/20">
                     <button id="btn_dc" class="mode-btn px-3 py-1.5 rounded-md text-xs font-semibold bg-white text-[#2d2e8b] shadow" onclick="window.setSourceMode('dc')">🔋 DC</button>
                     <button id="btn_ac" class="mode-btn px-3 py-1.5 rounded-md text-xs font-semibold text-white/80 hover:text-white" onclick="window.setSourceMode('ac')">〰️ AC</button>
                 </div>
@@ -81,7 +81,22 @@
         <!-- ======================================================= -->
         <!-- VIEW 1: PRESETS (CALCULATOR & THEORY LAB)               -->
         <!-- ======================================================= -->
-        <div id="presets-view" class="flex flex-col lg:flex-row gap-5">
+        <div id="presets-view" class="hidden flex-col gap-4">
+            <!-- Mode switch notice for users wondering where builder components are -->
+            <div class="w-full p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl flex flex-wrap items-center justify-between gap-3 text-xs md:text-sm text-blue-950 shadow-xs">
+                <div class="flex items-center gap-2.5">
+                    <span class="text-xl">💡</span>
+                    <div>
+                        <p class="font-bold text-indigo-900">กำลังอยู่ในโหมด "คำนวณตามสูตรทฤษฎี (Presets)"</p>
+                        <p class="text-indigo-700 text-xs">หากต้องการหยิบอุปกรณ์อิสระ (แบตเตอรี่, ตัวต้านทาน, สวิตช์, หลอดไฟ ฯลฯ) เพื่อต่อวงจรและเดินสายไฟเอง ให้สลับไปที่แท็บ <strong>Editor (ต่อวงจร)</strong></p>
+                    </div>
+                </div>
+                <button type="button" onclick="window.switchMainView('builder')" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold text-xs shrink-0 shadow-sm transition flex items-center gap-1.5">
+                    <span>🛠️ ไปที่ห้องต่อวงจร (Editor)</span> <span>→</span>
+                </button>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-5">
 
             <!-- LEFT PANEL: Input Controls (30%) -->
             <aside id="left-panel"
@@ -361,17 +376,23 @@
 
             </section>
         </div>
+        </div>
 
         <!-- ======================================================= -->
         <!-- VIEW 2: CIRCUIT BUILDER EDITOR                          -->
         <!-- ======================================================= -->
-        <div id="builder-view" class="hidden flex-col gap-0 border border-gray-300 rounded-lg overflow-hidden bg-white shadow-lg my-2">
+        <div id="builder-view" class="flex flex-col gap-0 border border-gray-300 rounded-lg overflow-hidden bg-white shadow-lg my-2">
 
             <!-- 1. SUB-HEADER TOOLBAR (FILE & ACTION TOOLBAR) -->
             <div id="circuit-toolbar" class="bg-[#f3f4f6] px-4 py-2 border-b border-gray-300 flex flex-wrap items-center justify-between gap-3 text-gray-700">
                 
                 <!-- Left Action Icons -->
                 <div class="flex items-center gap-1.5">
+                    <!-- Mobile Palette Toggle Button -->
+                    <button id="btn-toggle-sidebar" onclick="window.toggleMobileSidebar()" class="lg:hidden px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs flex items-center gap-1 shadow-sm shrink-0">
+                        <span>📦</span><span>อุปกรณ์</span>
+                    </button>
+
                     <button title="New Diagram" onclick="window.clear_builder_canvas()" class="p-1.5 rounded hover:bg-gray-200 text-gray-700 transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     </button>
@@ -425,12 +446,57 @@
                 </div>
             </div>
 
-            <!-- 2. MAIN EDITOR WORKSPACE (SIDEBAR + CANVAS) -->
-            <div class="flex flex-col lg:flex-row h-[700px] relative">
+            <!-- Mobile Quick Component Ribbon (Scrollable horizontally) -->
+            <div id="mobile-component-ribbon" class="lg:hidden flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-slate-50 via-indigo-50/40 to-slate-50 border-b border-gray-200 overflow-x-auto shrink-0 shadow-xs">
+                <span class="text-[11px] font-bold text-indigo-900 shrink-0 flex items-center gap-1">
+                    <span>⚡</span><span>อุปกรณ์:</span>
+                </span>
+                <button type="button" onclick="window.pick_component_tool('battery', 'แบตเตอรี่ (DC)')" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-gray-200 hover:border-indigo-400 text-gray-800 text-xs font-medium shadow-xs shrink-0 active:scale-95 transition">
+                    <span>🔋</span><span>แบตเตอรี่</span>
+                </button>
+                <button type="button" onclick="window.pick_component_tool('resistor_iec', 'ตัวต้านทาน')" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-gray-200 hover:border-indigo-400 text-gray-800 text-xs font-medium shadow-xs shrink-0 active:scale-95 transition">
+                    <span>▫️</span><span>ตัวต้านทาน</span>
+                </button>
+                <button type="button" onclick="window.pick_component_tool('switch', 'สวิตช์')" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-gray-200 hover:border-indigo-400 text-gray-800 text-xs font-medium shadow-xs shrink-0 active:scale-95 transition">
+                    <span>🔌</span><span>สวิตช์</span>
+                </button>
+                <button type="button" onclick="window.pick_component_tool('ground', 'กราวด์ (0V)')" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-gray-200 hover:border-indigo-400 text-gray-800 text-xs font-medium shadow-xs shrink-0 active:scale-95 transition">
+                    <span>⏚</span><span>กราวด์</span>
+                </button>
+                <button type="button" onclick="window.pick_component_tool('lamp', 'หลอดไฟ')" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-gray-200 hover:border-indigo-400 text-gray-800 text-xs font-medium shadow-xs shrink-0 active:scale-95 transition">
+                    <span>💡</span><span>หลอดไฟ</span>
+                </button>
+                <button type="button" onclick="window.pick_component_tool('junction', 'จุดรวมสาย')" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-gray-200 hover:border-indigo-400 text-gray-800 text-xs font-medium shadow-xs shrink-0 active:scale-95 transition">
+                    <span>🔲</span><span>จุดรวมสาย</span>
+                </button>
+                <button type="button" onclick="window.pick_component_tool('ac_power', 'แหล่งจ่าย AC')" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-gray-200 hover:border-indigo-400 text-gray-800 text-xs font-medium shadow-xs shrink-0 active:scale-95 transition">
+                    <span>〰️</span><span>AC Source</span>
+                </button>
+                <button type="button" onclick="window.pick_component_tool('voltmeter', 'โวลต์มิเตอร์')" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-gray-200 hover:border-indigo-400 text-gray-800 text-xs font-medium shadow-xs shrink-0 active:scale-95 transition">
+                    <span>🎛️</span><span>โวลต์มิเตอร์</span>
+                </button>
+                <button type="button" onclick="window.pick_component_tool('ammeter', 'แอมมิเตอร์')" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-gray-200 hover:border-indigo-400 text-gray-800 text-xs font-medium shadow-xs shrink-0 active:scale-95 transition">
+                    <span>🎛️</span><span>แอมมิเตอร์</span>
+                </button>
+                <button type="button" onclick="window.toggleMobileSidebar(true)" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-600 text-white text-xs font-semibold shadow-xs shrink-0 hover:bg-indigo-700 active:scale-95 transition">
+                    <span>📦</span><span>+ อุปกรณ์ทั้งหมด</span>
+                </button>
+            </div>
 
-                <!-- LEFT SIDEBAR PANEL -->
-                <aside class="w-full lg:w-72 bg-white border-r border-gray-300 flex flex-col h-full overflow-hidden shrink-0">
+            <!-- 2. MAIN EDITOR WORKSPACE (SIDEBAR + CANVAS) -->
+            <div class="flex flex-col lg:flex-row h-[calc(100vh-140px)] min-h-[580px] max-h-[920px] relative overflow-hidden">
+
+                <!-- LEFT SIDEBAR PANEL (OFF-CANVAS DRAWER ON MOBILE, DOCKED ON DESKTOP) -->
+                <aside id="builder-sidebar" class="fixed lg:static inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white border-r border-gray-300 flex flex-col h-full shadow-2xl lg:shadow-none transition-transform duration-300 -translate-x-full lg:translate-x-0 shrink-0">
                     
+                    <!-- Mobile Close Header -->
+                    <div class="flex items-center justify-between p-3 border-b border-gray-200 lg:hidden bg-indigo-50/70">
+                        <span class="font-bold text-xs text-indigo-900 flex items-center gap-1.5"><span>📦</span><span>เลือกอุปกรณ์ไฟฟ้า</span></span>
+                        <button onclick="window.toggleMobileSidebar(false)" class="p-1 rounded text-gray-500 hover:bg-gray-200">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
                     <!-- Tools -->
                     <div class="p-3 border-b border-gray-200">
                         <h3 class="text-xs font-semibold text-gray-600 mb-2">Tools</h3>
@@ -545,12 +611,47 @@
                     </div>
                 </aside>
 
+                <!-- Mobile Backdrop Overlay -->
+                <div id="sidebar-backdrop" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 lg:hidden hidden transition-opacity" onclick="window.toggleMobileSidebar(false)"></div>
+
                 <!-- CENTER SVG CANVAS AREA -->
                 <main id="circuit-map" class="flex-1 h-full relative">
+                    <!-- Tap-to-Place Guide Banner (Mobile Friendly) -->
+                    <div id="place-guide-banner" class="fixed top-24 left-1/2 -translate-x-1/2 bg-slate-900/90 text-white backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-semibold shadow-xl border border-slate-700 flex items-center gap-2 z-50 hidden pointer-events-auto">
+                        <span id="place-guide-text">🎯 แตะบนพื้นที่ว่างเพื่อวางอุปกรณ์</span>
+                        <button onclick="window.clear_active_tool()" class="px-2 py-0.5 bg-white/20 hover:bg-white/30 rounded-full text-[10px] font-bold transition-colors">✕ ยกเลิก</button>
+                    </div>
+
+                    <!-- Active Wiring Guide Banner (Mobile Friendly) -->
+                    <div id="wiring-guide-banner" class="fixed top-24 left-1/2 -translate-x-1/2 bg-indigo-900/95 text-white backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-semibold shadow-xl border border-indigo-500 flex items-center gap-2 z-50 hidden pointer-events-auto">
+                        <span>🔌 แตะขาอุปกรณ์ปลายทางเพื่อต่อสาย (แตะที่ว่างเพื่อหักมุม)</span>
+                        <button onclick="window.cancelActiveWiring()" class="px-2 py-0.5 bg-white/20 hover:bg-white/30 rounded-full text-[10px] font-bold transition-colors">✕ ยกเลิก</button>
+                    </div>
+
                     <!-- Diagnostic Banner Display -->
-                    <div id="diagnostic-banner" class="absolute top-3 left-1/2 -translate-x-1/2 bg-amber-500/95 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-lg border border-amber-300 flex items-center gap-2 z-30 transition-all duration-200 hidden">
+                    <div id="diagnostic-banner" class="fixed top-24 left-1/2 -translate-x-1/2 bg-amber-500/95 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-lg border border-amber-300 flex items-center gap-2 z-50 transition-all duration-200 hidden">
                         <span id="diagnostic-banner-icon">⚠</span>
                         <span id="diagnostic-banner-text"></span>
+                    </div>
+
+                    <!-- Mobile Floating Action Bar (Rotate, Duplicate, Properties, Delete) -->
+                    <div id="mobile-floating-actions" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-md border border-gray-200 rounded-full shadow-2xl px-3 py-1.5 flex items-center gap-2 z-50 hidden transition-all duration-200">
+                        <button id="mobile-btn-rotate" onclick="window.rotate_selected_component()" class="flex items-center gap-1 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 active:bg-indigo-200 rounded-full text-xs font-semibold shadow-sm transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            <span>หมุน 90°</span>
+                        </button>
+                        <button id="mobile-btn-props" onclick="window.open_selected_inspector()" class="flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 active:bg-slate-300 rounded-full text-xs font-semibold shadow-sm transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            <span>ตั้งค่า</span>
+                        </button>
+                        <button id="mobile-btn-alt-route" onclick="window.toggle_selected_connection_route()" class="flex items-center gap-1 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 active:bg-blue-200 rounded-full text-xs font-semibold shadow-sm transition-colors hidden">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                            <span>สลับมุม</span>
+                        </button>
+                        <button id="mobile-btn-delete" onclick="window.delete_selected_component_or_connection()" class="flex items-center gap-1 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 active:bg-rose-200 rounded-full text-xs font-semibold shadow-sm transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            <span>ลบ</span>
+                        </button>
                     </div>
 
                     <svg xmlns="http://www.w3.org/2000/svg" id="circuit" width="2000" height="1500" viewBox="0 0 2000 1500" class="w-full h-full">
@@ -587,8 +688,8 @@
                         </div>
                     </div>
 
-                    <!-- FLOATING LAYERS PANEL -->
-                    <div id="layers-panel" class="absolute bottom-4 right-4 bg-white rounded-lg shadow-xl border border-gray-300 w-60 overflow-hidden z-40">
+                    <!-- FLOATING LAYERS PANEL (Desktop & Tablet) -->
+                    <div id="layers-panel" class="hidden sm:block absolute bottom-4 right-4 bg-white rounded-lg shadow-xl border border-gray-300 w-60 overflow-hidden z-20">
                         <div class="bg-gray-100 px-3 py-2 border-b border-gray-200 flex items-center justify-between">
                             <div class="flex items-center gap-1.5 text-xs font-bold text-gray-700">
                                 <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>

@@ -10,7 +10,7 @@ import { drawResonanceChart } from '../visualizers/resonance-chart.js';
 import { drawStarDeltaDiagram } from '../visualizers/star-delta-diagram.js';
 
 export const ST = {
-    mainView: 'presets', // 'presets' | 'builder'
+    mainView: 'builder', // 'presets' | 'builder'
     src: 'dc',
     cir: 'ohm',
     anim: true,

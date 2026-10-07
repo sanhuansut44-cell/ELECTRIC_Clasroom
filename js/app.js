@@ -32,7 +32,17 @@ import {
     set_component_layout,
     set_zoom,
     zoom_level,
-    update_viewbox
+    update_viewbox,
+    create_component_on_canvas,
+    select_component,
+    deselect_component,
+    delete_selected_component_or_connection,
+    toggle_selected_connection_route,
+    open_selected_inspector,
+    toggleMobileSidebar,
+    cancelActiveWiring,
+    clear_active_tool,
+    pick_component_tool
 } from './controllers/builder-controller.js';
 
 import {
@@ -73,6 +83,16 @@ window.setTimeDiv = setTimeDiv;
 window.toggleChannel = toggleChannel;
 window.toggleMath = toggleMath;
 window.clearProbes = clearProbes;
+window.create_component_on_canvas = create_component_on_canvas;
+window.select_component = select_component;
+window.deselect_component = deselect_component;
+window.delete_selected_component_or_connection = delete_selected_component_or_connection;
+window.toggle_selected_connection_route = toggle_selected_connection_route;
+window.open_selected_inspector = open_selected_inspector;
+window.toggleMobileSidebar = toggleMobileSidebar;
+window.cancelActiveWiring = cancelActiveWiring;
+window.clear_active_tool = clear_active_tool;
+window.pick_component_tool = pick_component_tool;
 Object.defineProperty(window, 'zoom_level', {
     get: () => zoom_level
 });
@@ -86,4 +106,5 @@ window.addEventListener('DOMContentLoaded', () => {
     try { enhanceNumberInputs(); } catch (e) {}
     try { animLoop(); } catch (e) {}
     try { updateWiringPanel(ST); } catch (e) {}
+    try { switchMainView('builder', update_viewbox); } catch (e) {}
 });

@@ -23,7 +23,7 @@ export function initInspector({ onUpdate, onDelete, onRotate, onDuplicate }) {
     if (!el) {
         el = document.createElement('div');
         el.id = 'property-inspector';
-        el.className = 'absolute top-3 right-3 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-indigo-200 w-72 overflow-hidden z-40 transition-all duration-200 hidden font-sans';
+        el.className = 'absolute top-2 right-2 left-2 sm:left-auto sm:right-3 sm:top-3 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-indigo-200 w-auto sm:w-72 max-w-[calc(100vw-16px)] overflow-hidden z-40 transition-all duration-200 hidden font-sans';
         const mapContainer = document.getElementById('circuit-map');
         if (mapContainer) mapContainer.appendChild(el);
     }
