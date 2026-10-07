@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="ห้องปฏิบัติการเสมือนจริง สำหรับวิเคราะห์วงจรไฟฟ้ากระแสตรง (DC) และกระแสสลับ (AC) พร้อมระบบต่อวงจรอิสระ Interactive Circuit Builder Editor v5.0">
+    <title>Interactive Virtual Lab for DC/AC Circuits &amp; Circuit Builder v5.0 (Modular)</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Custom Modular CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="bg-gradient-to-br from-slate-100 to-indigo-50/50 min-h-screen">
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- HEADER                                                      -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <header class="bg-gradient-to-r from-[#242674] via-[#2d2e8b] to-[#38399a] text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-[1700px] mx-auto px-4 flex flex-col md:flex-row items-center justify-between py-3 gap-3">
+            
+            <!-- Left Branding & Title -->
+            <div class="flex items-center gap-3.5 w-full md:w-auto">
+                <div class="w-11 h-11 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-xl shadow-inner shrink-0 text-amber-400">
+                    ⚡
+                </div>
+                <div>
+                    <h1 class="text-lg md:text-xl lg:text-2xl font-bold tracking-tight text-white font-sans leading-tight">
+                        Interactive Virtual Lab &amp; Circuit Builder
+                    </h1>
+                    <p class="text-xs md:text-sm text-indigo-200/90 font-normal">
+                        ห้องปฏิบัติการเสมือนจริงและระบบต่อวงจรไฟฟ้า <span class="opacity-90 font-mono">DC/AC Interactive v5.0 (Modular Edition)</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right Controls: View Switcher (Presets vs Builder) & Source Mode -->
+            <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+                <div class="flex items-center bg-black/25 rounded-lg p-1 border border-white/20">
+                    <button id="btn_view_presets"
+                        class="main-tab-btn active px-3.5 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 bg-white text-[#2d2e8b] shadow-sm"
+                        onclick="window.switchMainView('presets')">
+                        <span>⚡ Presets</span>
+                        <span class="text-[10px] opacity-75">(วิเคราะห์)</span>
+                    </button>
+                    <button id="btn_view_builder"
+                        class="main-tab-btn px-3.5 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 text-white/80 hover:text-white transition-colors"
+                        onclick="window.switchMainView('builder')">
+                        <span>🛠️ Editor</span>
+                        <span class="text-[10px] opacity-75">(ต่อวงจร)</span>
+                    </button>
+                </div>
+
+                <!-- AC / DC Toggle (For Presets) -->
+                <div id="source-toggle" class="flex items-center bg-black/25 rounded-lg p-1 border border-white/20">
+                    <button id="btn_dc" class="mode-btn px-3 py-1.5 rounded-md text-xs font-semibold bg-white text-[#2d2e8b] shadow" onclick="window.setSourceMode('dc')">🔋 DC</button>
+                    <button id="btn_ac" class="mode-btn px-3 py-1.5 rounded-md text-xs font-semibold text-white/80 hover:text-white" onclick="window.setSourceMode('ac')">〰️ AC</button>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- MAIN CONTENT CONTAINER                                      -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <main class="max-w-[1650px] mx-auto px-3 md:px-6 py-4">
+
+        <!-- ======================================================= -->
+        <!-- VIEW 1: PRESETS (CALCULATOR & THEORY LAB)               -->
+        <!-- ======================================================= -->
+        <div id="presets-view" class="flex flex-col lg:flex-row gap-5">
+
+            <!-- LEFT PANEL: Input Controls (30%) -->
+            <aside id="left-panel"
+                class="w-full lg:w-[30%] lg:min-w-[340px] space-y-4 scroll-panel lg:max-h-[calc(100vh-100px)] lg:overflow-y-auto lg:sticky lg:top-4 pb-4">
+
+                <!-- Circuit Mode Tabs -->
+                <div class="bg-white rounded-xl shadow-md p-4 border border-gray-100">
+                    <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Circuit Topology</h2>
+                    <div id="dc-tabs" class="flex flex-wrap gap-2">
+                        <button class="tab-btn active px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-200 bg-gray-50"
+                            data-mode="ohm" onclick="window.setCircuitMode('ohm')">Ohm's Law</button>
+                        <button class="tab-btn px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-200 bg-gray-50"
+                            data-mode="series_dc" onclick="window.setCircuitMode('series_dc')">Series</button>
+                        <button class="tab-btn px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-200 bg-gray-50"
+                            data-mode="parallel_dc" onclick="window.setCircuitMode('parallel_dc')">Parallel</button>
+                        <button class="tab-btn px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-200 bg-gray-50"
+                            data-mode="star_delta" onclick="window.setCircuitMode('star_delta')">Star‑Delta</button>
+                    </div>
+                    <div id="ac-tabs" class="flex flex-wrap gap-2 hidden">
+                        <button class="tab-btn active px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-200 bg-gray-50"
+                            data-mode="series_ac" onclick="window.setCircuitMode('series_ac')">Series RLC</button>
+                        <button class="tab-btn px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-200 bg-gray-50"
+                            data-mode="parallel_ac" onclick="window.setCircuitMode('parallel_ac')">Parallel RLC</button>
+                        <button class="tab-btn px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-200 bg-gray-50"
+                            data-mode="resonance" onclick="window.setCircuitMode('resonance')">🔔 Resonance</button>
+                    </div>
+                </div>
+
+                <!-- DC Parameters -->
+                <div id="dc-params" class="bg-white rounded-xl shadow-md p-4 border border-gray-100 space-y-4">
+                    <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">DC Parameters</h2>
+                    <div class="param-group">
+                        <div class="flex justify-between items-baseline mb-1">
+                            <label class="text-sm font-semibold text-amber-600">⚡ Voltage (V)</label>
+                            <span class="text-xs text-gray-400">Volts</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="range" id="sl_v_dc" min="0" max="500" step="1" value="100" class="flex-1 sl-amber" oninput="window.syncSlider('v_dc')">
+                            <input type="number" id="in_v_dc" min="0" max="10000" step="0.1" value="100" class="w-20 px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-right mono" oninput="window.syncInput('v_dc')">
+                            <span class="text-sm font-medium text-gray-500 w-6">V</span>
+                        </div>
+                    </div>
+                    <div class="param-group">
+                        <div class="flex justify-between items-baseline mb-1">
+                            <label class="text-sm font-semibold text-red-500">Ω Resistance (R₁)</label>
+                            <span class="text-xs text-gray-400">Ohms</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="range" id="sl_r1" min="0" max="1000" step="1" value="100" class="flex-1 sl-red" oninput="window.syncSlider('r1')">
+                            <input type="number" id="in_r1" min="0" max="100000" step="0.1" value="100" class="w-20 px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-right mono" oninput="window.syncInput('r1')">
+                            <span class="text-sm font-medium text-gray-500 w-6">Ω</span>
+                        </div>
+                    </div>
+                    <div id="r2-group" class="param-group hidden">
+                        <div class="flex justify-between items-baseline mb-1">
+                            <label class="text-sm font-semibold text-red-400">Ω Resistance (R₂)</label>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="range" id="sl_r2" min="0" max="1000" step="1" value="200" class="flex-1 sl-red" oninput="window.syncSlider('r2')">
+                            <input type="number" id="in_r2" min="0" max="100000" step="0.1" value="200" class="w-20 px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-right mono" oninput="window.syncInput('r2')">
+                            <span class="text-sm font-medium text-gray-500 w-6">Ω</span>
+                        </div>
+                    </div>
+                    <div id="r3-group" class="param-group hidden">
+                        <div class="flex justify-between items-baseline mb-1">
+                            <label class="text-sm font-semibold text-red-300">Ω Resistance (R₃)</label>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="range" id="sl_r3" min="0" max="1000" step="1" value="300" class="flex-1 sl-red" oninput="window.syncSlider('r3')">
+                            <input type="number" id="in_r3" min="0" max="100000" step="0.1" value="300" class="w-20 px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-right mono" oninput="window.syncInput('r3')">
+                            <span class="text-sm font-medium text-gray-500 w-6">Ω</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Star-Delta Parameters -->
+                <div id="sd-params" class="bg-white rounded-xl shadow-md p-4 border border-gray-100 space-y-3 hidden">
+                    <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Star ⇌ Delta Conversion</h2>
+                    <p class="text-xs text-gray-500">แปลงวงจรเพื่อวิเคราะห์ค่าความต้านทาน — ป้อนค่าฝั่งใดฝั่งหนึ่ง ระบบจะคำนวณอีกฝั่งให้อัตโนมัติ</p>
+                    <div class="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                        <h3 class="text-sm font-bold text-blue-700 mb-2">△ Delta (Ra, Rb, Rc)</h3>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div><label class="text-xs text-blue-600 font-medium">Ra</label><input type="number" id="sd_ra" value="30" min="0.1" step="0.1" class="w-full px-2 py-1.5 border border-blue-300 rounded text-sm mono text-center" oninput="window.calcSD('delta')"></div>
+                            <div><label class="text-xs text-blue-600 font-medium">Rb</label><input type="number" id="sd_rb" value="60" min="0.1" step="0.1" class="w-full px-2 py-1.5 border border-blue-300 rounded text-sm mono text-center" oninput="window.calcSD('delta')"></div>
+                            <div><label class="text-xs text-blue-600 font-medium">Rc</label><input type="number" id="sd_rc" value="90" min="0.1" step="0.1" class="w-full px-2 py-1.5 border border-blue-300 rounded text-sm mono text-center" oninput="window.calcSD('delta')"></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-center text-gray-400 text-xl font-bold">⇅</div>
+                    <div class="bg-green-50 rounded-lg p-3 border border-green-200">
+                        <h3 class="text-sm font-bold text-green-700 mb-2">Y Star (R1, R2, R3)</h3>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div><label class="text-xs text-green-600 font-medium">R1</label><input type="number" id="sd_r1" value="" min="0.1" step="0.1" class="w-full px-2 py-1.5 border border-green-300 rounded text-sm mono text-center" oninput="window.calcSD('star')"></div>
+                            <div><label class="text-xs text-green-600 font-medium">R2</label><input type="number" id="sd_r2" value="" min="0.1" step="0.1" class="w-full px-2 py-1.5 border border-green-300 rounded text-sm mono text-center" oninput="window.calcSD('star')"></div>
+                            <div><label class="text-xs text-green-600 font-medium">R3</label><input type="number" id="sd_r3" value="" min="0.1" step="0.1" class="w-full px-2 py-1.5 border border-green-300 rounded text-sm mono text-center" oninput="window.calcSD('star')"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AC Parameters -->
+                <div id="ac-params" class="bg-white rounded-xl shadow-md p-4 border border-gray-100 space-y-4 hidden">
+                    <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">AC Parameters</h2>
+                    <div class="param-group">
+                        <div class="flex justify-between items-baseline mb-1">
+                            <label class="text-sm font-semibold text-amber-600">⚡ V<sub>peak</sub></label>
+                            <span class="text-xs text-gray-400">Volts (peak)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="range" id="sl_v_ac" min="1" max="500" step="1" value="100" class="flex-1 sl-amber" oninput="window.syncSlider('v_ac')">
+                            <input type="number" id="in_v_ac" min="0.1" max="10000" step="0.1" value="100" class="w-20 px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-right mono" oninput="window.syncInput('v_ac')">
+                            <span class="text-sm font-medium text-gray-500 w-6">V</span>
+                        </div>
+                    </div>
+                    <div class="param-group">
+                        <div class="flex justify-between items-baseline mb-1">
+                            <label class="text-sm font-semibold text-purple-600">〰️ Frequency (f)</label>
+                            <span class="text-xs text-gray-400">Hz</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="range" id="sl_freq" min="1" max="1000" step="1" value="50" class="flex-1 sl-purple" oninput="window.syncSlider('freq')">
+                            <input type="number" id="in_freq" min="0.1" max="10000" step="0.1" value="50" class="w-20 px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-right mono" oninput="window.syncInput('freq')">
+                            <span class="text-sm font-medium text-gray-500 w-8">Hz</span>
+                        </div>
+                    </div>
+                    <div class="param-group border-t border-gray-100 pt-3">
+                        <div class="flex justify-between items-baseline mb-1">
+                            <label class="text-sm font-semibold text-red-500">Ω Resistance (R)</label>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="range" id="sl_r_ac" min="0" max="5000" step="1" value="100" class="flex-1 sl-red" oninput="window.syncSlider('r_ac')">
+                            <input type="number" id="in_r_ac" min="0" max="100000" step="0.1" value="100" class="w-20 px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-right mono" oninput="window.syncInput('r_ac')">
+                            <span class="text-sm font-medium text-gray-500 w-6">Ω</span>
+                        </div>
+                    </div>
+                    <div class="param-group">
+                        <div class="flex justify-between items-baseline mb-1">
+                            <label class="text-sm font-semibold text-blue-500">⌁ Inductance (L)</label>
+                            <span class="text-xs text-gray-400">mH</span>
+                        </div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <input type="range" id="sl_l" min="0" max="1000" step="1" value="150" class="flex-1 sl-blue" oninput="window.syncSlider('l')">
+                            <input type="number" id="in_l" min="0" max="10000" step="0.1" value="150" class="w-20 px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-right mono" oninput="window.syncInput('l')">
+                            <span class="text-sm font-medium text-gray-500 w-8">mH</span>
+                        </div>
+                        <div class="flex items-center justify-between bg-blue-50 px-3 py-1.5 rounded border border-blue-100">
+                            <span class="text-xs font-semibold text-blue-600">Reactance X_L (Ω)</span>
+                            <input type="number" id="in_xl" min="0" step="0.1" class="w-24 px-2 py-1 border border-blue-200 rounded text-sm mono text-right text-blue-700" oninput="window.syncXL()">
+                        </div>
+                    </div>
+                    <div class="param-group">
+                        <div class="flex justify-between items-baseline mb-1">
+                            <label class="text-sm font-semibold text-green-500">⏚ Capacitance (C)</label>
+                            <span class="text-xs text-gray-400">µF</span>
+                        </div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <input type="range" id="sl_c" min="0" max="1000" step="1" value="100" class="flex-1 sl-green" oninput="window.syncSlider('c')">
+                            <input type="number" id="in_c" min="0" max="10000" step="0.1" value="100" class="w-20 px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-right mono" oninput="window.syncInput('c')">
+                            <span class="text-sm font-medium text-gray-500 w-8">µF</span>
+                        </div>
+                        <div class="flex items-center justify-between bg-green-50 px-3 py-1.5 rounded border border-green-100">
+                            <span class="text-xs font-semibold text-green-600">Reactance X_C (Ω)</span>
+                            <input type="number" id="in_xc" min="0" step="0.1" class="w-24 px-2 py-1 border border-green-200 rounded text-sm mono text-right text-green-700" oninput="window.syncXC()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Results -->
+                <div class="bg-white rounded-xl shadow-md p-4 border border-gray-100">
+                    <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Quick Results</h2>
+                    <div id="quick-res" class="space-y-2 text-sm"></div>
+                </div>
+            </aside>
+
+            <!-- RIGHT PANEL: Output / Visualization (70%) -->
+            <section id="right-panel" class="w-full lg:w-[70%] space-y-5">
+                <div id="dc-out" class="space-y-4">
+                    <div class="bg-white rounded-xl shadow-md p-5 border border-gray-100">
+                        <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <span class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600 text-base">📊</span>
+                            DC Analysis Results
+                        </h2>
+                        <div id="dc-grid" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+                    </div>
+                    <div id="sd-diagram" class="bg-white rounded-xl shadow-md p-5 border border-gray-100 hidden">
+                        <h2 class="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
+                            <span class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 text-base">△</span>
+                            Star‑Delta Circuit Conversion Diagram
+                        </h2>
+                        <div class="flex justify-center"><canvas id="sdCanvas" width="560" height="300" style="background:#f8fafc;border-radius:12px;max-width:100%;"></canvas></div>
+                    </div>
+                </div>
+
+                <div id="ac-out" class="space-y-4 hidden">
+                    <div class="bg-white rounded-xl shadow-md p-5 border border-gray-100">
+                        <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <span class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600 text-base">📊</span>
+                            AC Analysis Results
+                        </h2>
+                        <div id="ac-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"></div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+                        <div class="flex flex-wrap items-center justify-between p-4 border-b border-gray-100 gap-2">
+                            <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                <span class="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center text-green-600 text-base">📈</span>
+                                <span>Oscilloscope (รูปคลื่นสัญญาณ v(t), i(t) และการวิเคราะห์เฟส)</span>
+                            </h2>
+                            <div class="flex items-center gap-2">
+                                <button id="btn_anim" onclick="window.toggleAnim()" class="px-3 py-1.5 rounded-lg text-sm font-medium bg-green-50 text-green-700 border border-green-200 hover:bg-green-100">⏸ Pause</button>
+                                <button onclick="window.exportChart()" class="px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100">📥 Export</button>
+                            </div>
+                        </div>
+
+                        <!-- Trace Selector Pills -->
+                        <div id="osc-channel-selector" class="flex flex-wrap items-center justify-center gap-2 px-4 pt-2 pb-2 text-xs font-semibold bg-gray-50/70 border-b border-gray-100">
+                            <span class="text-gray-500 text-[11px]">เลือกสัญญาณ:</span>
+                            <button id="btn-trace-v" onclick="window.toggleTrace('v')" class="px-2.5 py-1 rounded-full border border-amber-300 bg-amber-50 text-amber-800 transition-all">v(t) แหล่งจ่าย</button>
+                            <button id="btn-trace-i" onclick="window.toggleTrace('i')" class="px-2.5 py-1 rounded-full border border-sky-300 bg-sky-50 text-sky-800 transition-all">i(t) รวม</button>
+                            <button id="btn-trace-vR" onclick="window.toggleTrace('vR')" class="px-2.5 py-1 rounded-full border border-rose-300 bg-rose-50 text-rose-800 transition-all">v_R(t)</button>
+                            <button id="btn-trace-vL" onclick="window.toggleTrace('vL')" class="px-2.5 py-1 rounded-full border border-indigo-300 bg-indigo-50 text-indigo-800 transition-all">v_L(t) (+90°)</button>
+                            <button id="btn-trace-vC" onclick="window.toggleTrace('vC')" class="px-2.5 py-1 rounded-full border border-emerald-300 bg-emerald-50 text-emerald-800 transition-all">v_C(t) (−90°)</button>
+                            <button id="btn-trace-vLC" onclick="window.toggleTrace('vLC')" class="px-2.5 py-1 rounded-full border border-purple-300 bg-purple-50 text-purple-800 opacity-40 transition-all font-bold">✨ v_L + v_C (หักล้างรีโซแนนซ์)</button>
+                        </div>
+
+                        <div id="chart-legend" class="flex flex-wrap justify-center gap-3 px-4 pt-2 text-xs font-medium"></div>
+                        <div class="p-4 relative" style="height:360px;"><canvas id="oscChart"></canvas></div>
+                    </div>
+
+                    <!-- AC Circuit Schematic Diagram -->
+                    <div id="ac-circuit-diagram-panel" class="bg-white rounded-xl shadow-md p-5 border border-gray-100">
+                        <h2 class="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">
+                            <span class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600 text-base">⚡</span>
+                            AC Circuit Schematic Diagram
+                        </h2>
+                        <p id="ac_circuit_desc" class="text-xs text-gray-500 mb-3">Schematic diagram showing voltage source, branch currents, and component parameters.</p>
+                        <div class="flex justify-center">
+                            <canvas id="ac-circuit-canvas" width="680" height="260"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md p-5 border border-gray-100">
+                        <h2 class="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">
+                            <span class="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 text-base">🎯</span>
+                            Impedance Phasor Diagram (Z = R + jX)
+                        </h2>
+                        <p id="phasor_desc" class="text-xs text-gray-500 mb-3 text-center">Impedance Triangle: Z = R + jX (Ω)</p>
+                        <div class="flex justify-center"><canvas id="phasorCanvas" width="400" height="400" class="max-w-full"></canvas></div>
+                    </div>
+                </div>
+
+                <div id="res-out" class="space-y-4 hidden">
+                    <div class="bg-white rounded-xl shadow-md p-5 border border-gray-100">
+                        <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <span class="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600 text-base">🔔</span>
+                            Resonance Analysis
+                        </h2>
+                        <div id="res-grid" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+                        <div class="p-4 border-b border-gray-100"><h2 class="text-lg font-bold text-gray-800">📉 Frequency Response</h2></div>
+                        <div class="p-4 relative" style="height:360px;"><canvas id="resChart"></canvas></div>
+                    </div>
+                </div>
+
+                <!-- HOW TO WIRE PANEL -->
+                <div id="wiring-panel">
+                    <div class="wp-header">
+                        <span style="font-size:1.3rem;">🔌</span>
+                        <span class="wp-title">How to Wire the Circuit</span>
+                        <span class="wp-badge" id="wiring-mode-label">Ohm's Law</span>
+                    </div>
+                    <div id="wiring-canvas-wrap">
+                        <canvas id="wiring-canvas" width="680" height="280"></canvas>
+                    </div>
+                    <div id="wiring-steps"></div>
+                    <div class="wiring-legend" id="wiring-legend"></div>
+                </div>
+
+            </section>
+        </div>
+
+        <!-- ======================================================= -->
+        <!-- VIEW 2: CIRCUIT BUILDER EDITOR                          -->
+        <!-- ======================================================= -->
+        <div id="builder-view" class="hidden flex-col gap-0 border border-gray-300 rounded-lg overflow-hidden bg-white shadow-lg my-2">
+
+            <!-- 1. SUB-HEADER TOOLBAR (FILE & ACTION TOOLBAR) -->
+            <div id="circuit-toolbar" class="bg-[#f3f4f6] px-4 py-2 border-b border-gray-300 flex flex-wrap items-center justify-between gap-3 text-gray-700">
+                
+                <!-- Left Action Icons -->
+                <div class="flex items-center gap-1.5">
+                    <button title="New Diagram" onclick="window.clear_builder_canvas()" class="p-1.5 rounded hover:bg-gray-200 text-gray-700 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    </button>
+                    <button title="Open Search Focus" onclick="document.getElementById('component-search-text-box').focus()" class="p-1.5 rounded hover:bg-gray-200 text-gray-700 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/></svg>
+                    </button>
+
+                    <div class="w-[1px] h-5 bg-gray-300 mx-1"></div>
+
+                    <button title="Rotate Selected Component 90° (Shortcut: R)" onclick="window.rotate_selected_component()" class="p-1.5 rounded hover:bg-gray-200 text-gray-700 transition-colors flex items-center gap-1 font-medium text-xs">
+                        <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <span class="hidden md:inline text-xs font-semibold">Rotate 90°</span>
+                    </button>
+
+                    <div class="w-[1px] h-5 bg-gray-300 mx-1"></div>
+
+                    <button id="btn-simulate" title="Run Simulation" onclick="window.run_circuit_simulation()" class="p-1.5 rounded hover:bg-emerald-100 text-emerald-700 transition-colors flex items-center gap-1 font-bold text-xs">
+                        <svg class="w-4 h-4 fill-emerald-600" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        <span class="text-xs font-semibold text-emerald-800">Simulate</span>
+                    </button>
+
+                    <div class="w-[1px] h-5 bg-gray-300 mx-1"></div>
+
+                    <button id="btn-toggle-builder-scope" title="เปิด/ปิด ดิจิทัลออสซิลโลสโคป (CH1/CH2 Scope)" onclick="window.toggleBuilderScope()" class="p-1.5 rounded hover:bg-indigo-100 text-indigo-700 transition-colors flex items-center gap-1 font-bold text-xs bg-indigo-50 border border-indigo-200">
+                        <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12h3l3-8 4 16 3-8h5"/></svg>
+                        <span class="text-xs font-semibold text-indigo-900">Oscilloscope</span>
+                    </button>
+                </div>
+
+                <!-- Right Quick Presets & Zoom Controls -->
+                <div class="flex items-center gap-2 text-xs">
+                    <div class="hidden sm:flex items-center gap-1 bg-white border border-gray-300 rounded px-2 py-1">
+                        <span class="text-gray-500 font-semibold text-[11px]">Presets:</span>
+                        <button onclick="window.build_preset_topology('series')" class="text-blue-600 hover:underline text-[11px] font-medium">Series</button>
+                        <span class="text-gray-300">|</span>
+                        <button onclick="window.build_preset_topology('parallel')" class="text-purple-600 hover:underline text-[11px] font-medium">Parallel</button>
+                        <span class="text-gray-300">|</span>
+                        <button onclick="window.build_preset_topology('mixed')" class="text-amber-600 hover:underline text-[11px] font-medium">Mixed</button>
+                    </div>
+
+                    <div class="flex items-center border border-gray-300 rounded bg-white overflow-hidden text-xs">
+                        <button onclick="window.set_zoom(window.zoom_level - 0.15)" class="px-2 py-0.5 hover:bg-gray-100 border-r border-gray-200 font-bold">−</button>
+                        <span id="btn-zoom-reset" onclick="window.set_zoom(1.0)" class="px-2 py-0.5 font-mono cursor-pointer hover:bg-gray-50"><span class="btn-text">140%</span></span>
+                        <button onclick="window.set_zoom(window.zoom_level + 0.15)" class="px-2 py-0.5 hover:bg-gray-100 border-l border-gray-200 font-bold">+</button>
+                    </div>
+
+                    <div class="flex items-center gap-1 text-xs text-gray-500 font-mono pl-2 border-l border-gray-300">
+                        <span id="status-indicator" class="status-dot"></span>
+                        <span id="status-text">Ready</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. MAIN EDITOR WORKSPACE (SIDEBAR + CANVAS) -->
+            <div class="flex flex-col lg:flex-row h-[700px] relative">
+
+                <!-- LEFT SIDEBAR PANEL -->
+                <aside class="w-full lg:w-72 bg-white border-r border-gray-300 flex flex-col h-full overflow-hidden shrink-0">
+                    
+                    <!-- Tools -->
+                    <div class="p-3 border-b border-gray-200">
+                        <h3 class="text-xs font-semibold text-gray-600 mb-2">Tools</h3>
+                        <div class="flex items-center gap-2">
+                            <button id="btn-mode-select" onclick="window.set_app_mode('select')" title="Selection Tool" class="p-2 border border-gray-300 rounded hover:bg-gray-100 bg-indigo-600 text-white active">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M7 2l12 11.2-5.8.5 3.3 7.3-2.2 1-3.2-7.4L5 18.5V2z"/></svg>
+                            </button>
+                            <button id="btn-mode-wire" onclick="window.set_app_mode('wire')" title="Wire Tool" class="p-2 border border-gray-300 rounded hover:bg-gray-100 text-gray-700">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 12h16M12 4v16"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+                            </button>
+                            <button id="btn-mode-pan" onclick="window.set_app_mode('pan')" title="Pan Canvas" class="p-2 border border-gray-300 rounded hover:bg-gray-100 text-gray-700">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 11V5a2 2 0 014 0v6M11 11V3a2 2 0 014 0v8M15 11V7a2 2 0 014 0v7a6 6 0 01-12 0v-3a2 2 0 014 0v0"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Components Header & Search -->
+                    <div class="p-3 border-b border-gray-200 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xs font-semibold text-gray-600">Components</h3>
+                            <div class="flex items-center gap-1">
+                                <button id="btn-layout-list" onclick="window.set_component_layout('list')" title="List View" class="p-1 hover:bg-gray-100 rounded text-gray-700 active">
+                                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+                                </button>
+                                <button id="btn-layout-grid" onclick="window.set_component_layout('grid')" title="Grid View" class="p-1 hover:bg-gray-100 rounded text-gray-500">
+                                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M4 4h7v7H4zm9 0h7v7h-7zm0 9h7v7h-7zm-9 0h7v7H4z"/></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="relative">
+                            <input type="text" id="component-search-text-box" placeholder="Search components..." class="w-full px-3 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 pr-7">
+                            <svg class="w-3.5 h-3.5 absolute right-2.5 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        </div>
+                    </div>
+
+                    <!-- Component Palette -->
+                    <div id="component-tool-list" class="flex-1 overflow-y-auto p-2 space-y-1.5 text-xs">
+                        
+                        <div class="component-box" data-category="power">
+                            <div class="component-tool-icon"><svg width="32" height="32" viewBox="0 0 100 100"><line x1="10" y1="50" x2="30" y2="50" stroke="#000" stroke-width="2.5"/><line x1="30" y1="20" x2="30" y2="80" stroke="#ef4444" stroke-width="4"/><line x1="42" y1="35" x2="42" y2="65" stroke="#000" stroke-width="2.5"/><line x1="55" y1="20" x2="55" y2="80" stroke="#000" stroke-width="4"/><line x1="68" y1="35" x2="68" y2="65" stroke="#3b82f6" stroke-width="2.5"/><line x1="68" y1="50" x2="90" y2="50" stroke="#000" stroke-width="2.5"/><text x="25" y="18" font-size="14" font-weight="bold" fill="#ef4444">+</text><text x="70" y="18" font-size="14" font-weight="bold" fill="#3b82f6">−</text></svg></div>
+                            <div class="flex-1"><h4 class="text-xs font-medium text-gray-800">แบตเตอรี่ (DC)</h4><span class="text-[10px] text-gray-400">Battery</span></div>
+                            <img class="component-tool hidden" src="" alt="battery">
+                        </div>
+
+                        <div class="component-box" data-category="power">
+                            <div class="component-tool-icon"><svg width="32" height="32" viewBox="0 0 100 100"><line x1="5" y1="50" x2="20" y2="50" stroke="#000" stroke-width="3"/><circle cx="50" cy="50" r="28" stroke="#000" stroke-width="2.5" fill="none"/><path d="M 32,50 q 9,-18 18,0 t 18,0" stroke="#4f46e5" stroke-width="2.5" fill="none"/><line x1="80" y1="50" x2="95" y2="50" stroke="#000" stroke-width="3"/></svg></div>
+                            <div class="flex-1"><h4 class="text-xs font-medium text-gray-800">แหล่งจ่าย AC</h4><span class="text-[10px] text-gray-400">AC Source</span></div>
+                            <img class="component-tool hidden" src="" alt="ac_power">
+                        </div>
+
+                        <div class="component-box" data-category="passive">
+                            <div class="component-tool-icon"><svg width="32" height="32" viewBox="0 0 100 100"><line x1="5" y1="50" x2="25" y2="50" stroke="#000" stroke-width="3"/><rect x="25" y="38" width="50" height="24" fill="#fff" stroke="#000" stroke-width="3"/><line x1="75" y1="50" x2="95" y2="50" stroke="#000" stroke-width="3"/></svg></div>
+                            <div class="flex-1"><h4 class="text-xs font-medium text-gray-800">ตัวต้านทาน (IEC)</h4><span class="text-[10px] text-gray-400">Resistor</span></div>
+                            <img class="component-tool hidden" src="" alt="resistor_iec">
+                        </div>
+
+                        <div class="component-box" data-category="passive">
+                            <div class="component-tool-icon"><svg width="32" height="32" viewBox="0 0 100 100"><polyline points="10,50 25,50 30,35 40,65 50,35 60,65 70,35 75,50 90,50" fill="none" stroke="#000" stroke-width="3"/></svg></div>
+                            <div class="flex-1"><h4 class="text-xs font-medium text-gray-800">ตัวต้านทาน (US)</h4><span class="text-[10px] text-gray-400">Resistor Zig-zag</span></div>
+                            <img class="component-tool hidden" src="" alt="resistor_us">
+                        </div>
+
+                        <div class="component-box" data-category="passive">
+                            <div class="component-tool-icon"><svg width="32" height="32" viewBox="0 0 100 100"><line x1="5" y1="50" x2="20" y2="50" stroke="#000" stroke-width="3"/><path d="M 20 50 A 7.5 11 0 0 1 35 50 A 7.5 11 0 0 1 50 50 A 7.5 11 0 0 1 65 50 A 7.5 11 0 0 1 80 50" fill="none" stroke="#2563eb" stroke-width="3.5"/><line x1="80" y1="50" x2="95" y2="50" stroke="#000" stroke-width="3"/></svg></div>
+                            <div class="flex-1"><h4 class="text-xs font-medium text-gray-800">ตัวเหนี่ยวนำ (L)</h4><span class="text-[10px] text-gray-400">Inductor</span></div>
+                            <img class="component-tool hidden" src="" alt="inductor">
+                        </div>
+
+                        <div class="component-box" data-category="passive">
+                            <div class="component-tool-icon"><svg width="32" height="32" viewBox="0 0 100 100"><line x1="5" y1="50" x2="44" y2="50" stroke="#000" stroke-width="3"/><line x1="44" y1="24" x2="44" y2="76" stroke="#059669" stroke-width="4"/><line x1="56" y1="24" x2="56" y2="76" stroke="#059669" stroke-width="4"/><line x1="56" y1="50" x2="95" y2="50" stroke="#000" stroke-width="3"/></svg></div>
+                            <div class="flex-1"><h4 class="text-xs font-medium text-gray-800">ตัวเก็บประจุ (C)</h4><span class="text-[10px] text-gray-400">Capacitor</span></div>
+                            <img class="component-tool hidden" src="" alt="capacitor">
+                        </div>
+
+                        <div class="component-box" data-category="switch">
+                            <div class="component-tool-icon"><svg width="32" height="32" viewBox="0 0 100 100"><line x1="10" y1="50" x2="35" y2="50" stroke="#000" stroke-width="3"/><circle cx="35" cy="50" r="4" fill="#000"/><line x1="35" y1="50" x2="70" y2="25" stroke="#000" stroke-width="3"/><circle cx="70" cy="50" r="4" fill="#000"/><line x1="70" y1="50" x2="90" y2="50" stroke="#000" stroke-width="3"/></svg></div>
+                            <div class="flex-1"><h4 class="text-xs font-medium text-gray-800">สวิตช์</h4><span class="text-[10px] text-gray-400">Toggle Switch</span></div>
+                            <img class="component-tool hidden" src="" alt="switch">
+                        </div>
+
+                        <div class="component-box" data-category="output">
+                            <div class="component-tool-icon"><svg width="32" height="32" viewBox="0 0 100 100"><line x1="5" y1="50" x2="22" y2="50" stroke="#000" stroke-width="3"/><circle cx="50" cy="50" r="28" fill="#fff" stroke="#000" stroke-width="2.5"/><line x1="30" y1="30" x2="70" y2="70" stroke="#f59e0b" stroke-width="2.5"/><line x1="70" y1="30" x2="30" y2="70" stroke="#f59e0b" stroke-width="2.5"/><line x1="78" y1="50" x2="95" y2="50" stroke="#000" stroke-width="3"/></svg></div>
+                            <div class="flex-1"><h4 class="text-xs font-medium text-gray-800">หลอดไฟ</h4><span class="text-[10px] text-gray-400">Lamp</span></div>
+                            <img class="component-tool hidden" src="" alt="lamp">
+                        </div>
+
+                        <div class="component-box" data-category="meter">
+                            <div class="component-tool-icon"><svg width="32" height="32" viewBox="0 0 100 100"><line x1="5" y1="50" x2="22" y2="50" stroke="#000" stroke-width="3"/><circle cx="50" cy="50" r="28" fill="#eff6ff" stroke="#2563eb" stroke-width="3"/><text x="50" y="60" text-anchor="middle" font-size="30" font-weight="bold" fill="#2563eb">V</text><line x1="78" y1="50" x2="95" y2="50" stroke="#000" stroke-width="3"/></svg></div>
+                            <div class="flex-1"><h4 class="text-xs font-medium text-gray-800">โวลต์มิเตอร์ (V)</h4><span class="text-[10px] text-gray-400">Voltmeter</span></div>
+                            <img class="component-tool hidden" src="" alt="voltmeter">
+                        </div>
+
+                        <div class="component-box" data-category="meter">
+                            <div class="component-tool-icon"><svg width="32" height="32" viewBox="0 0 100 100"><line x1="5" y1="50" x2="22" y2="50" stroke="#000" stroke-width="3"/><circle cx="50" cy="50" r="28" fill="#fff7ed" stroke="#ea580c" stroke-width="3"/><text x="50" y="60" text-anchor="middle" font-size="30" font-weight="bold" fill="#ea580c">A</text><line x1="78" y1="50" x2="95" y2="50" stroke="#000" stroke-width="3"/></svg></div>
+                            <div class="flex-1"><h4 class="text-xs font-medium text-gray-800">แอมมิเตอร์ (A)</h4><span class="text-[10px] text-gray-400">Ammeter</span></div>
+                            <img class="component-tool hidden" src="" alt="ammeter">
+                        </div>
+
+                        <div class="component-box" data-category="basic">
+                            <div class="component-tool-icon"><svg width="32" height="32" viewBox="0 0 100 100"><line x1="50" y1="5" x2="50" y2="50" stroke="#000" stroke-width="3"/><line x1="15" y1="50" x2="85" y2="50" stroke="#000" stroke-width="3.5"/><line x1="25" y1="62" x2="75" y2="62" stroke="#000" stroke-width="2.5"/><line x1="35" y1="74" x2="65" y2="74" stroke="#000" stroke-width="2"/></svg></div>
+                            <div class="flex-1"><h4 class="text-xs font-medium text-gray-800">กราวด์ (0V)</h4><span class="text-[10px] text-gray-400">Ground</span></div>
+                            <img class="component-tool hidden" src="" alt="ground">
+                        </div>
+
+                        <div class="component-box" data-category="basic">
+                            <div class="component-tool-icon"><svg width="32" height="32" viewBox="0 0 100 100"><circle cx="50" cy="50" r="14" fill="#1e293b"/><line x1="15" y1="50" x2="85" y2="50" stroke="#1e293b" stroke-width="4"/><line x1="50" y1="15" x2="50" y2="85" stroke="#1e293b" stroke-width="4"/><circle cx="50" cy="50" r="6" fill="#3b82f6"/></svg></div>
+                            <div class="flex-1"><h4 class="text-xs font-medium text-gray-800">จุดรวมสาย (Junction)</h4><span class="text-[10px] text-gray-400">3-Way / 4-Way Node</span></div>
+                            <img class="component-tool hidden" src="" alt="junction">
+                        </div>
+
+                    </div>
+                </aside>
+
+                <!-- CENTER SVG CANVAS AREA -->
+                <main id="circuit-map" class="flex-1 h-full relative">
+                    <!-- Diagnostic Banner Display -->
+                    <div id="diagnostic-banner" class="absolute top-3 left-1/2 -translate-x-1/2 bg-amber-500/95 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-lg border border-amber-300 flex items-center gap-2 z-30 transition-all duration-200 hidden">
+                        <span id="diagnostic-banner-icon">⚠</span>
+                        <span id="diagnostic-banner-text"></span>
+                    </div>
+
+                    <svg xmlns="http://www.w3.org/2000/svg" id="circuit" width="2000" height="1500" viewBox="0 0 2000 1500" class="w-full h-full">
+                        <defs>
+                            <marker id="arrowhead-pos" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                                <polygon points="0 0, 8 3, 0 6" fill="#10b981" />
+                            </marker>
+                            <marker id="arrowhead-neg" markerWidth="8" markerHeight="6" refX="0" refY="3" orient="auto">
+                                <polygon points="8 0, 0 3, 8 6" fill="#ef4444" />
+                            </marker>
+                        </defs>
+                        <g id="connections"></g>
+                        <g id="simulation-overlay"></g>
+                        <g id="component-labels"></g>
+                        <g id="multimeter-probes"></g>
+                        <g id="snap-layer">
+                            <circle id="snap-indicator" cx="-100" cy="-100" r="14" class="snap-ring hidden" />
+                        </g>
+                    </svg>
+
+                    <!-- Coordinate Overlay Display -->
+                    <div id="circuit-overlay" class="absolute top-3 right-3 bg-white/90 border border-gray-300 px-2.5 py-1 rounded text-[11px] font-mono text-gray-500 shadow-sm pointer-events-none">
+                        <span>(</span><span id="overlay-coords">0, 0</span><span>)</span>
+                    </div>
+
+                    <!-- Circuit Type Detection Badge -->
+                    <div id="circuit-type-badge" class="absolute top-3 left-3 hidden pointer-events-none">
+                        <div class="flex items-center gap-2 bg-white/95 backdrop-blur border border-gray-200 rounded-xl px-3 py-2 shadow-lg">
+                            <div id="circuit-type-icon" class="w-7 h-7 rounded-lg flex items-center justify-center text-base shrink-0"></div>
+                            <div>
+                                <div id="circuit-type-label" class="text-xs font-bold text-gray-800 leading-tight"></div>
+                                <div id="circuit-type-sub" class="text-[10px] text-gray-500 leading-tight"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FLOATING LAYERS PANEL -->
+                    <div id="layers-panel" class="absolute bottom-4 right-4 bg-white rounded-lg shadow-xl border border-gray-300 w-60 overflow-hidden z-40">
+                        <div class="bg-gray-100 px-3 py-2 border-b border-gray-200 flex items-center justify-between">
+                            <div class="flex items-center gap-1.5 text-xs font-bold text-gray-700">
+                                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                                <span>Layers</span>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Item List -->
+                        <ul id="layers-list" class="max-h-48 overflow-y-auto divide-y divide-gray-100 text-xs text-gray-700">
+                            <li class="px-3 py-1.5 flex items-center justify-between bg-gray-50 italic text-gray-400">
+                                <span>No elements on canvas</span>
+                            </li>
+                        </ul>
+
+                        <div class="bg-gray-50 px-3 py-1.5 border-t border-gray-200 flex items-center justify-between text-gray-500">
+                            <button onclick="window.delete_selected_layer()" title="Delete Selected" class="p-1 hover:text-red-600 hover:bg-gray-200 rounded">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </button>
+                            <button title="Rotate 90° (Shortcut: R)" onclick="window.rotate_selected_component()" class="p-1 hover:text-indigo-600 hover:bg-gray-200 rounded">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            </button>
+                            <button title="Duplicate" onclick="window.duplicate_selected_component()" class="p-1 hover:text-gray-800 hover:bg-gray-200 rounded">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- FLOATING DIGITAL OSCILLOSCOPE PANEL (BUILDER MODE) -->
+                    <div id="builder-scope-panel" class="absolute bottom-2 left-2 right-2 md:right-64 bg-slate-900/95 text-white backdrop-blur-md border border-slate-700/80 rounded-xl shadow-2xl p-3 z-40 hidden flex flex-col gap-2">
+                        <!-- Header: Title, Probe Buttons, Timebase & Close -->
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700/60 pb-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded bg-indigo-500/20 border border-indigo-400/40 flex items-center justify-center text-indigo-400 text-xs">📈</div>
+                                <span class="text-xs font-bold tracking-wide text-slate-100">Virtual Digital Oscilloscope</span>
+                                <span id="scope-measurements" class="ml-2"></span>
+                            </div>
+
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <!-- Probe actions -->
+                                <button id="btn-scope-probe-ch1" onclick="window.setProbeSelectingMode('ch1')" title="คลิกแล้วแตะที่ขาอุปกรณ์เพื่อติดโพรบ CH1" class="px-2 py-0.5 rounded text-[11px] font-semibold border border-rose-500/60 bg-rose-950/40 text-rose-300 hover:bg-rose-900/60 transition-all">📍 ติดโพรบ CH1 (แดง)</button>
+                                <button id="btn-scope-probe-ch2" onclick="window.setProbeSelectingMode('ch2')" title="คลิกแล้วแตะที่ขาอุปกรณ์เพื่อติดโพรบ CH2" class="px-2 py-0.5 rounded text-[11px] font-semibold border border-sky-500/60 bg-sky-950/40 text-sky-300 hover:bg-sky-900/60 transition-all">📍 ติดโพรบ CH2 (ฟ้า)</button>
+                                <button onclick="window.clearProbes()" title="ปลดโพรบทั้งหมด" class="px-1.5 py-0.5 rounded text-[11px] font-semibold border border-slate-600 bg-slate-800 text-slate-400 hover:text-white transition-all">❌ ปลดโพรบ</button>
+
+                                <div class="w-[1px] h-4 bg-slate-700 mx-1"></div>
+
+                                <!-- Time / Div -->
+                                <span class="text-[10px] text-slate-400 font-mono">Time/Div:</span>
+                                <button id="btn-scope-tdiv-2" onclick="window.setTimeDiv(2)" class="px-1.5 py-0.5 rounded text-[10px] font-mono border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700">2ms</button>
+                                <button id="btn-scope-tdiv-5" onclick="window.setTimeDiv(5)" class="px-1.5 py-0.5 rounded text-[10px] font-mono border border-indigo-400 bg-slate-700 text-white font-bold">5ms</button>
+                                <button id="btn-scope-tdiv-10" onclick="window.setTimeDiv(10)" class="px-1.5 py-0.5 rounded text-[10px] font-mono border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700">10ms</button>
+                                <button id="btn-scope-tdiv-20" onclick="window.setTimeDiv(20)" class="px-1.5 py-0.5 rounded text-[10px] font-mono border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700">20ms</button>
+
+                                <button onclick="window.toggleBuilderScope(false)" class="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 ml-1">✕</button>
+                            </div>
+                        </div>
+
+                        <!-- Active Probe Selection Banner / Hint -->
+                        <div id="scope-selecting-hint" class="text-xs bg-amber-500/20 border border-amber-500/40 text-amber-300 px-2.5 py-1 rounded hidden animate-pulse font-medium"></div>
+
+                        <!-- Canvas Scope Screen -->
+                        <div class="relative w-full bg-slate-950/80 rounded-lg border border-slate-800 p-2" style="height: 185px;">
+                            <canvas id="builderScopeCanvas"></canvas>
+                        </div>
+
+                        <!-- Footer Controls: Channel Toggles & Badges -->
+                        <div class="flex items-center justify-between text-xs pt-1 px-1 flex-wrap gap-2">
+                            <div class="flex items-center gap-2">
+                                <button id="btn-scope-toggle-ch1" onclick="window.toggleChannel('ch1')" class="px-2 py-0.5 rounded text-[11px] font-semibold border border-rose-500 bg-rose-500/20 text-rose-300">● CH1 (แดง)</button>
+                                <button id="btn-scope-toggle-ch2" onclick="window.toggleChannel('ch2')" class="px-2 py-0.5 rounded text-[11px] font-semibold border border-sky-500 bg-sky-500/20 text-sky-300">● CH2 (ฟ้า)</button>
+                                <button id="btn-scope-toggle-math" onclick="window.toggleMath()" class="px-2 py-0.5 rounded text-[11px] font-semibold border border-purple-500 bg-purple-500/20 text-purple-300 opacity-40">● Math: CH1 - CH2 (ม่วง)</button>
+                            </div>
+                            <div class="flex items-center gap-3 text-[11px] font-mono text-slate-400">
+                                <span id="scope-ch1-badge">CH1: ไม่ได้ต่อ</span>
+                                <span id="scope-ch2-badge">CH2: ไม่ได้ต่อ</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </main>
+            </div>
+
+            <!-- 3. FOOTER STATUS BAR -->
+            <footer class="bg-[#f8fafc] border-t border-gray-300 px-4 py-2 flex items-center justify-between text-xs text-gray-500 font-sans">
+                <div>
+                    <span>© 2026 Interactive Virtual Lab &amp; Circuit Editor (Modular Architecture)</span>
+                </div>
+                <div class="flex items-center gap-1 text-emerald-600 font-medium">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span>Editor Ready</span>
+                </div>
+            </footer>
+
+        </div>
+
+    </main>
+
+    <!-- DRAG GHOST FLOATING ELEMENT -->
+    <div id="drag-ghost" class="fixed pointer-events-none z-[9999] hidden -translate-x-1/2 -translate-y-1/2 p-2.5 bg-white/95 backdrop-blur-md border-2 border-indigo-500/80 rounded-2xl shadow-2xl transition-transform duration-75 flex flex-col items-center gap-1">
+        <div id="drag-ghost-svg" class="w-16 h-16 flex items-center justify-center"></div>
+        <div id="drag-ghost-label" class="text-[11px] font-bold text-indigo-900 text-center font-mono"></div>
+    </div>
+
+    <!-- MAIN MODULE ENTRY SCRIPT -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
